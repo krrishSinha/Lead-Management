@@ -7,10 +7,11 @@ const app = express()
 app.use(express.json())
 require('dotenv').config()
 
-app.use(cors({ 
-    origin: 'https://lead-management-1-15lg.onrender.com',
-    credentials: true
- }))
+app.use(cors({
+  origin: 'https://leadmanagementprojectt.netlify.app', 
+  methods: ['GET','POST','PUT','DELETE'],
+  credentials: true
+}));
 
 const PORT = process.env.PORT || 8000
 
