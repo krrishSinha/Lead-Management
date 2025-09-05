@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 const API = axios.create({
-    baseURL: 'http://localhost:3000/api/v1'
+    baseURL: import.meta.env.VITE_API_URL
 });
 
 
@@ -17,9 +17,19 @@ export const getLeads = async (params) => {
     return API.get('/leads', { params }).then((result) => result.data)
 };
 
+// get lead by ID
+export const getLeadById = async (id) => {
+    return API.get(`/leads/${id}`).then((result) => result.data)
+};
+
 // update lead status 
 export const updateLeadStatus = async (id, status) => {
     return API.put(`/leads/${id}`, { status }).then((result) => result.data)
+};
+
+// update lead details 
+export const updateLeadDetails = async (id, data) => {
+    return API.put(`/leads/edit/${id}`, data).then((result) => result.data)
 };
 
 // delete lead 

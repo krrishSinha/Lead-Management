@@ -2,17 +2,32 @@ import React, { useEffect } from 'react'
 import { useState } from 'react'
 import toast from 'react-hot-toast';
 import { Mail, Phone, Building, Briefcase, Users, Download, Search, Filter, Eye, Trash2 } from 'lucide-react';
-import { deleteLead, getLeads, updateLeadStatus } from '../api/leadsApi';
+import { deleteLead, getLeadById, getLeads, updateLeadStatus } from '../api/leadsApi';
 import { differenceInHours, format, formatDistanceToNow } from 'date-fns'
+import Loader from './Loader';
+import { CSVLink } from "react-csv";
+import LeadModal from './LeadModal';
 
 
+const LeadList = ({ handleSetLeads }) => {
 
-const LeadList = () => {
     const [leads, setLeads] = useState([])
+    const [lead, setLead] = useState([])
     const [loading, setLoading] = useState(false)
     const [search, setSearch] = useState('')
     const [status, setStatus] = useState('all')
     const [source, setSource] = useState('all')
+
+    const headers = [
+        { label: "First Name", key: "firstName" },
+        { label: "Last Name", key: "lastName" },
+        { label: "Email", key: "email" },
+        { label: "Phone", key: "phone" },
+        { label: "Company", key: "company" },
+        { label: "Job Title", key: "job_title" },
+        { label: "Status", key: "status" },
+        { label: "Source", key: "source" },
+    ];
 
     const [open, setOpen] = useState(false);
 
@@ -21,6 +36,7 @@ const LeadList = () => {
         try {
             const res = await getLeads({ search, status, source })
             setLeads(res.data || [])
+            handleSetLeads(res.data)
         } catch (err) {
             console.log(err)
         } finally {
@@ -53,7 +69,18 @@ const LeadList = () => {
         }
     };
 
-    console.log(leads);
+    const openLeadModal = async (id) => {
+        const toastId = toast.loading('please wait...')
+        const result = await getLeadById(id)
+        setOpen(!open)
+        toast.dismiss(toastId)
+        setLead(result?.data)
+    }
+
+    const onUpdate = () => {
+        console.log('updated');
+        fetch()
+    }
 
     return (
 
@@ -71,10 +98,16 @@ const LeadList = () => {
                 </div>
 
                 <div className='mt-4 sm:mt-0 '>
-                    <button className="flex items-center px-4 py-2 cursor-pointer bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 w-full " >
-                        <Download className="w-4 h-4 mr-2" />
-                        Export CSV
-                    </button>
+                    <CSVLink
+                        data={leads}
+                        headers={headers}
+                        filename="leads.csv"
+                    >
+                        <button className="flex items-center px-4 py-2 cursor-pointer bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 w-full " >
+                            <Download className="w-4 h-4 mr-2" />
+                            Export CSV
+                        </button>
+                    </CSVLink>
                 </div>
             </div>
 
@@ -93,9 +126,8 @@ const LeadList = () => {
                     <div className='' >
                         <select className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                             value={status}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => setStatus(e.target.value)}
                         >
-
                             <option value="all">All Statuses</option>
                             <option value="new">New</option>
                             <option value="contacted">Contacted</option>
@@ -127,7 +159,7 @@ const LeadList = () => {
 
             {
                 loading ? (
-                    <div>loading...</div>
+                    <Loader />
                 )
                     :
                     leads.length == 0 ? (
@@ -189,13 +221,13 @@ const LeadList = () => {
                                                 </div>
 
                                                 <div className='mt-2 sm:mt-0' >• Created: {
-                                                    lead.createdAt
-                                                        ? differenceInHours(new Date(), new Date(lead.createdAt)) < 24
-                                                            ? (formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })
+                                                    lead.updatedAt
+                                                        ? differenceInHours(new Date(), new Date(lead.updatedAt)) < 24
+                                                            ? (formatDistanceToNow(new Date(lead.updatedAt), { addSuffix: true })
                                                                 .includes("less than a minute")
                                                                 ? "Now"
-                                                                : formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true }))
-                                                            : format(new Date(lead.createdAt), "MMM d, yyyy")
+                                                                : formatDistanceToNow(new Date(lead.updatedAt), { addSuffix: true }))
+                                                            : format(new Date(lead.updatedAt), "MMM d, yyyy")
                                                         : "Unknown"
                                                 }
                                                 </div>
@@ -221,7 +253,7 @@ const LeadList = () => {
                                                 <button
                                                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
                                                     title="View details"
-                                                    onClick={() => setOpen(!open)}
+                                                    onClick={() => openLeadModal(lead._id)}
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
@@ -249,80 +281,9 @@ const LeadList = () => {
             {/* modal  */}
 
             {
-                open &&
-                <div
-                    onClick={() => setOpen(false)}
-                    className="fixed inset-0 bg-gray-50/40 flex items-center justify-center p-4 z-50">
-
-                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
-                        <div className="p-6 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xl font-bold text-gray-900">Lead Details</h3>
-                                <button
-                                    onClick={() => setOpen(!open)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                    <p className="text-gray-900">Carl Johnson</p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full`}>
-                                        New
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <p className="text-gray-900"> carl@gmail.com </p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                    <p className="text-gray-900">+91 99999999</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                                    <p className="text-gray-900">Carl Finance</p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                                    <p className="text-gray-900"> Software Enginner </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                                    <p className="text-gray-900"> Website </p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Created</label>
-                                    <p className="text-gray-900"> Now </p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-900"> take that Lead </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                open && (
+                    <LeadModal lead={lead} setOpen={setOpen} onUpdate={onUpdate} />
+                )
             }
 
         </div>

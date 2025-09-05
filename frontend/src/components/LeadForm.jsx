@@ -5,6 +5,8 @@ import * as z from "zod";
 import { createLead } from '../api/leadsApi';
 import toast from 'react-hot-toast';
 import { User, Mail, Phone, Building, Briefcase, MessageSquare, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 const leadShcema = z.object({
     firstName: z.string().min(1, 'First Name is required'),
@@ -23,23 +25,23 @@ const LeadForm = () => {
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(leadShcema) });
     const [isLoading, setIsLoading] = useState(false);
 
+    const navigate = useNavigate(); 
+
     const onSubmit = async (values) => {
 
+        const toastId = toast.loading('Please wait...')
         try {
-            toast.loading('please wait...')
             const result = await createLead(values)
-            console.log(result)
-            toast.success('Lead created')
+            toast.success('Lead created', { id: toastId }) 
+            navigate('/dashboard')
             reset()
         } catch (err) {
             console.error(err)
             toast.error('Failed to create lead')
-        } finally {
-            toast.dismissAll()
         }
     };
 
-    const inputClasses = (hasError) => `
+    const inputClasses = () => `
     w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ease-in-out border-gray-300 focus:outline-none
   `;
 
@@ -149,10 +151,12 @@ const LeadForm = () => {
                             className={`${inputClasses} !pl-2 mt-2 ${errors.firstName ? 'border-red-400 bg-red-50' : 'bg-white'} `}>
 
                             <option value='' className='' > Select Lead Source </option>
+                            <option value='website'> Website  </option>
+                            <option value='ad'> Ad  </option>
+                            <option value='referral'> Referral  </option>
+                            <option value='social media'> Social Media  </option>
+                            <option value='other'> Other  </option>
 
-                            {leadSources.map((source) => (
-                                <option key={source} value={source}> {source.charAt(0).toUpperCase() + source.slice(1)} </option>
-                            ))}
                         </select>
                         <p className="text-xs text-red-500">{errors.source ? 'Source is required' : ''}</p>
                     </div>

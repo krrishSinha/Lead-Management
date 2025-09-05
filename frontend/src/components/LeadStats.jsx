@@ -1,55 +1,67 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { TrendingUp, Users, Phone, CheckCircle, XCircle } from 'lucide-react';
 
-const statCards = [
-    {
-        title: 'Total Leads',
-        value: '0%',
-        icon: Users,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-100'
-    },
-    {
-        title: 'New Leads',
-        value: '0%',
-        icon: TrendingUp,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-100'
-    },
-    {
-        title: 'Contacted',
-        value: '0%',
-        icon: Phone,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-100'
-    },
-    {
-        title: 'Qualified',
-        value: '0%',
-        icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-100'
-    },
-    {
-        title: 'Converted',
-        value: '0%',
-        icon: CheckCircle,
-        color: 'text-emerald-600',
-        bgColor: 'bg-emerald-100'
-    },
-    {
-        title: 'Conversion Rate',
-        value: `0.0%`,
-        icon: TrendingUp,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100'
-    }
-];
 
-// const conversionRate = stats.total > 0 ? ((stats.converted / stats.total) * 100).toFixed(1) : '0.0';    
-// const conversionRate = '0.0'
 
-const LeadStats = () => {
+const LeadStats = ({ leads }) => {
+
+    const stats = useMemo(() => {
+        const total = leads.length;
+        const newLeads = leads.filter(l => l.status === 'new').length;
+        const contacted = leads.filter(l => l.status === 'contacted').length;
+        const converted = leads.filter(l => l.status === 'converted').length;
+        const lost = leads.filter(l => l.status === 'lost').length;
+
+        const conversionRate = total > 0 ? ((converted / total) * 100).toFixed(1) : '0.0';
+
+        return { total, newLeads, contacted, converted, lost, conversionRate };
+    }, [leads]);
+
+    const statCards = [
+        {
+            title: 'Total Leads',
+            value: stats.total,
+            icon: Users,
+            color: 'text-blue-600',
+            bgColor: 'bg-blue-100'
+        },
+        {
+            title: 'New Leads',
+            value: stats.newLeads,
+            icon: TrendingUp,
+            color: 'text-blue-600',
+            bgColor: 'bg-blue-100'
+        },
+        {
+            title: 'Contacted',
+            value: stats.contacted,
+            icon: Phone,
+            color: 'text-yellow-600',
+            bgColor: 'bg-yellow-100'
+        },
+        {
+            title: 'Converted',
+            value: stats.converted,
+            icon: CheckCircle,
+            color: 'text-emerald-600',
+            bgColor: 'bg-emerald-100'
+        },
+        {
+            title: 'Lost',
+            value: stats.lost,
+            icon: CheckCircle,
+            color: 'text-emerald-600',
+            bgColor: 'bg-emerald-100'
+        },
+        {
+            title: 'Conversion Rate',
+            value: `${stats.conversionRate}%`,
+            icon: TrendingUp,
+            color: 'text-purple-600',
+            bgColor: 'bg-purple-100'
+        }
+    ];
+
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 ">

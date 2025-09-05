@@ -78,6 +78,25 @@ export const getLeads = async (req, res) => {
 }
 
 
+// GET LEAD BY ID CONTROLLER 
+export const getLeadById = async (req, res) => {
+    try {
+
+        const { id } = req.params
+
+        const lead = await Lead.findById(id)
+
+        res.status(200).json({
+            success: true,
+            data: lead
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(400).json({ success: false, message: error })
+    }
+};
+
 
 // UPDATE LEAD CONTROLLER
 export const updateLeadStatus = async (req, res) => {
@@ -88,6 +107,30 @@ export const updateLeadStatus = async (req, res) => {
 
         const updated = await Lead.findByIdAndUpdate(id,
             { status: parsed.status },
+            { new: true }
+        )
+
+        res.status(200).json({
+            success: true,
+            data: updated
+        })
+
+
+    } catch (error) {
+        console.error(error)
+        res.status(400).json({ success: false, message: error })
+    }
+};
+
+// UPDATE LEAD DETAILS CONTROLLER
+export const updateLeadDetails = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        const parsed = leadShcema.parse(req.body)
+
+        const updated = await Lead.findByIdAndUpdate(id,
+            parsed,
             { new: true }
         )
 
