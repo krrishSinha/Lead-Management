@@ -7,6 +7,8 @@ const leadShcema = z.object({
     email: z.email(),
     phone: z.string().regex(/^\d{7,15}$/),
     message: z.string().max(500).optional(),
+    company: z.string().min(1, 'Company Name is required'),
+    job_title: z.string().min(1, 'Job Title is required'),
     source: z.enum(['website', 'ad', 'referral', 'social media', 'other']).optional()
 });
 
@@ -57,10 +59,12 @@ export const getLeads = async (req, res) => {
                 { lastName: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } },
                 { phone: { $regex: search, $options: "i" } },
+                { company: { $regex: search, $options: "i" } },
+                { job_title: { $regex: search, $options: "i" } },
             ];
         }
 
-        const leads = await Lead.find(filter).sort(sort);
+        const leads = await Lead.find(filter).sort(sort).lean();
 
         res.status(200).json({
             success: true,

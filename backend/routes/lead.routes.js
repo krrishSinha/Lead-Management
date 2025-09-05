@@ -9,7 +9,7 @@ router.post('/', createLead);
 router.get('/', getLeads);
 
 // update lead status 
-router.put('/:id/status', updateLeadStatus);
+router.put('/:id', updateLeadStatus);
 
 // delete lead
 router.delete('/:id', deleteLead);
