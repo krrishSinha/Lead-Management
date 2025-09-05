@@ -7,11 +7,7 @@ const app = express()
 app.use(express.json())
 require('dotenv').config()
 
-app.use(cors({
-  origin: 'https://leadmanagementprojectt.netlify.app', 
-  methods: ['GET','POST','PUT','DELETE'],
-  credentials: true
-}));
+app.use(cors());
 
 const PORT = process.env.PORT || 8000
 
